@@ -61,6 +61,8 @@ The behavior of which Akeneo products to sync, and how their data maps into comm
 
 A commercetools [Merchant Center App](#the-akeneo-sync-merchant-center-app) is included in this repository, providing a dashboard view of the Full Sync and Delta Sync jobs allowing teams to easily view the status of recent synchronizations. This app also allows users to modify the Data Mapping configuration object that managed which product families and attributes are synced to commercetools.
 
+![connector overview diagram](docs/connector-overview.png)
+
 ### What is included?
 
 This Connector includes the following Connect applications for deployment to the commercetools Connect platform:
