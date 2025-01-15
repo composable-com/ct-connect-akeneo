@@ -1,0 +1,12 @@
+{
+  "extends": "@tsconfig/recommended/tsconfig.json",
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "**/*.spec.ts", "tests"],
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "outDir": "./build",
+    "rootDir": "./src",
+    "inlineSourceMap": true,
+    "declaration": true
+  },
+}

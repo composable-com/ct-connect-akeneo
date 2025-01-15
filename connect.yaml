@@ -1,0 +1,135 @@
+deployAs:
+  - name: FullSync
+    applicationType: job
+    endpoint: /job
+    properties:
+      schedule: "*/1 * * * *"
+    scripts:
+      postDeploy: npm install && npm run build && npm run connector:post-deploy
+      preUndeploy: npm install && npm run build && npm run connector:pre-undeploy
+    configuration:
+      standardConfiguration:
+        - key: CTP_REGION
+          description: commercetools Composable Commerce API region
+          required: true
+          default: us-central1.gcp
+      securedConfiguration:
+        - key: CTP_PROJECT_KEY
+          description: commercetools Composable Commerce project key
+          required: true
+        - key: CTP_CLIENT_ID
+          description: commercetools Composable Commerce client ID
+          required: true
+        - key: CTP_CLIENT_SECRET
+          description: commercetools Composable Commerce client secret
+          required: true
+        - key: CTP_SCOPE
+          description: commercetools Composable Commerce client scope
+          required: true
+        - key: AKENEO_BASE_URL
+          description: Description for AKENEO_BASE_URL
+          required: true
+        - key: AKENEO_CLIENT_ID
+          description: Description for AKENEO_CLIENT_ID
+          required: true
+        - key: AKENEO_CLIENT_SECRET
+          description: Description for AKENEO_CLIENT_SECRET
+          required: true
+        - key: AKENEO_USERNAME
+          description: Description for AKENEO_USERNAME
+          required: true
+        - key: AKENEO_PASSWORD
+          description: Description for AKENEO_PASSWORD
+          required: true
+        - key: SET_PUBLISHED_TO_MODIFIED
+          description: Description for SET_PUBLISHED_TO_MODIFIED
+          required: false
+
+  - name: DeltaSync
+    applicationType: job
+    endpoint: /job
+    properties:
+      schedule: "*/5 * * * *"
+    scripts:
+      postDeploy: npm install && npm run build && npm run connector:post-deploy
+      preUndeploy: npm install && npm run build && npm run connector:pre-undeploy
+    configuration:
+      standardConfiguration:
+        - key: CTP_REGION
+          description: commercetools Composable Commerce API region
+          required: true
+          default: us-central1.gcp
+      securedConfiguration:
+        - key: CTP_PROJECT_KEY
+          description: commercetools Composable Commerce project key
+          required: true
+        - key: CTP_CLIENT_ID
+          description: commercetools Composable Commerce client ID
+          required: true
+        - key: CTP_CLIENT_SECRET
+          description: commercetools Composable Commerce client secret
+          required: true
+        - key: CTP_SCOPE
+          description: commercetools Composable Commerce client scope
+          required: true
+        - key: AKENEO_BASE_URL
+          description: Description for AKENEO_BASE_URL
+          required: true
+        - key: AKENEO_CLIENT_ID
+          description: Description for AKENEO_CLIENT_ID
+          required: true
+        - key: AKENEO_CLIENT_SECRET
+          description: Description for AKENEO_CLIENT_SECRET
+          required: true
+        - key: AKENEO_USERNAME
+          description: Description for AKENEO_USERNAME
+          required: true
+        - key: AKENEO_PASSWORD
+          description: Description for AKENEO_PASSWORD
+          required: true
+        - key: SET_PUBLISHED_TO_MODIFIED
+          description: Description for SET_PUBLISHED_TO_MODIFIED
+          required: false
+
+  - name: SyncManager
+    applicationType: service
+    endpoint: /service
+    scripts:
+      postDeploy: npm install && npm run build && npm run connector:post-deploy
+      preUndeploy: npm install && npm run build && npm run connector:pre-undeploy
+    configuration:
+      standardConfiguration:
+        - key: CTP_REGION
+          description: commercetools Composable Commerce API region
+          required: true
+          default: us-central1.gcp
+      securedConfiguration:
+        - key: CTP_PROJECT_KEY
+          description: commercetools Composable Commerce project key
+          required: true
+        - key: CTP_CLIENT_ID
+          description: commercetools Composable Commerce client ID
+          required: true
+        - key: CTP_CLIENT_SECRET
+          description: commercetools Composable Commerce client secret
+          required: true
+        - key: CTP_SCOPE
+          description: commercetools Composable Commerce client scope
+          required: true
+        - key: DEV_MODE
+          description: Only for testing purposes with mcApps that are not published to production
+          required: false
+
+  - name: MerchantCenterAkeneoSync
+    applicationType: merchant-center-custom-application
+    configuration:
+      standardConfiguration:
+        - key: CUSTOM_APPLICATION_ID
+          description: The Custom Application ID is provided when you add a Custom Application in the Merchant Center
+          required: true
+        - key: CLOUD_IDENTIFIER
+          description: The identifier of the cloud Region that the Custom Application uses to connect to Composable Commerce. The values map to the actual Merchant Center API URL for that Region
+          default: gcp-us
+        - key: ENTRY_POINT_URI_PATH
+          description: The Application entry point URI path identified during registration of Custom Application
+          required: true
