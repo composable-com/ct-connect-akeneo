@@ -6,6 +6,8 @@ This repository is intended to serve as a foundational starting point for teams 
 
 This README provides step-by-step instructions on configuring and deploying the Akeneo Connector, helping developers quickly implement the solution for real-world use cases, minimizing manual data entry, and ensuring up-to-date product information.
 
+![Merchant Center App](./docs/merchant-center-app.png)
+
 ## Table of Contents
 
 - [Overview](#overview)
@@ -57,7 +59,7 @@ The Connector contains two `jobs` (see [Connect applications](https://docs.comme
 - Full Sync: This job will sync all product records to commercetools.
 - Delta Sync: This job will sync recent product updates to commercetools.
 
-The behavior of which Akeneo products to sync, and how their data maps into commercetools, is configured via a JSON [Data Mapping](#data-mapping-configuration) object.
+The behavior of which Akeneo products to sync, and how their data maps into commercetools, is configured via a JSON [Data Mapping](#data-mapping-configuration) object. This mapping configuration is managed in the Merchant Center, allowing teams to easily adjust and fine tune which products and attributes are being synced.
 
 A commercetools [Merchant Center App](#the-akeneo-sync-merchant-center-app) is included in this repository, providing a dashboard view of the Full Sync and Delta Sync jobs allowing teams to easily view the status of recent synchronizations. This app also allows users to modify the Data Mapping configuration object that managed which product families and attributes are synced to commercetools.
 
@@ -78,7 +80,7 @@ This Connector includes the following Connect applications for deployment to the
     - A dashboard view of the Full Sync and Delta Sync jobs.
     - Enabled users to start and stop the sync jobs.
     - View recent sync errors.
-    - Modify the [Data Mapping](#data-mapping-configuration) configuration object
+    - Modify the [Data Mapping](#data-mapping-configuration) configuration.
 
 ## Prerequisites
 
@@ -145,9 +147,17 @@ Add the following attributes to each mapped Product Type:
 
 ## Data Mapping Configuration
 
-This section covers how to setup the required Data Mapping JSON object, that contains the desired Akeneo Product Families to sync, and how their attributes are mapped into commercetools.
+This section covers how to setup the required Data Mapping configuration, instructing the connector which Akeneo Product Families to sync, and how their attributes are mapped into commercetools.
 
 The Data Mapping configuration is stored in a Custom Object on the commercetools API. See the [SyncConfig](#syncconfig-custom-object) Custom Object.
+
+To edit the the Data Mapping configuration, click on the **Edit Configuration** button in the Akeneo Sync Merchant Center App.
+
+When editing the Data Mapping configuration, the app will validate the configuration in real time and when saving to ensure the configuration is valid.
+
+The below sections cover the Typing system used to define the Data Mapping configuration. These types are meant to bootstrap the configuration object for a team using this connector and should be extended and modified as necessary to meet your data syncing requirements.
+
+![Configuration Mapping in the Merchant Center App](./docs/configuration-mapping.png)
 
 ### Types
 
@@ -209,6 +219,8 @@ This is an example Data Mapping configuration object that maps two Akeneo Produc
 - The image field for the family is defined in `akeneoImagesAttribute`. Images stored in this field will be uploaded to commercetools and applied to commercetools product variant records.
 - The `categoryMapping` mapping defines the mapping for two categories. A human readable label is provided to assist the maintainer of the mapping configuration.
 - The `localeMapping` mapping defines the mapping of the desired locales to map.
+
+The below code shows the mapping defined in a .ts file to showcase the typing system supporting a mapping configuration. When using this connector, you will only need to save the JSON object itself, without the typescript Types.
 
 ```ts
 const config: Config = {
@@ -420,7 +432,7 @@ The Merchant Center app provides users in the commercetools Merchant Center with
 - Modify the Data Mapping configuration object via the `Edit Configuration` button.
   - The configuration object is validated before saving, using type `Config`. See `common-connect/src/types/config.types.ts` for the type definition. This type can be expanded and modified as needed to suite your Akeneo sync data requirements.
 
-![Merchant Center App](merchant-center-app.png)
+![Merchant Center App](./docs/merchant-center-app.png)
 
 ## Deployment
 
