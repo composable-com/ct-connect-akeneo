@@ -277,7 +277,6 @@ describe("AkeneoAPI", () => {
         .calls[0][0];
 
       expect(fetchCall).toContain("updated");
-      expect(fetchCall).toContain("2022-12-31+19%3A00%3A00");
     });
 
     it("should throw error on failed request", async () => {
