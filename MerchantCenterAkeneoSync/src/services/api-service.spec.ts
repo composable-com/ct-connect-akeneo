@@ -1,5 +1,11 @@
 import { apiService } from './api-service';
 import * as appShell from '@commercetools-frontend/application-shell';
+import createHttpUserAgent from '@commercetools/http-user-agent';
+
+// Mock the HTTP user agent
+jest.mock('@commercetools/http-user-agent', () => {
+  return jest.fn().mockReturnValue('mocked-user-agent');
+});
 
 // Store original references before mocking
 const originalBuildApiUrl = appShell.buildApiUrl;
@@ -17,9 +23,58 @@ jest.mock('@commercetools-frontend/application-shell', () => ({
 const mockFetch = jest.fn();
 global.fetch = mockFetch;
 
+// Mock window.app for testing constructor logic
+const originalWindow = { ...window };
+const mockWindow = {
+  app: {
+    applicationName: 'test-app',
+  },
+};
+
 describe('ApiService', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Restore window object
+    Object.defineProperty(global, 'window', {
+      value: originalWindow,
+      writable: true,
+    });
+  });
+
+  describe('constructor', () => {
+    it('should initialize user agent with window.app.applicationName when available', () => {
+      // Mock window.app
+      Object.defineProperty(global, 'window', {
+        value: mockWindow,
+        writable: true,
+      });
+
+      // Create a new instance to trigger constructor
+      const newApiService = new (apiService.constructor as any)();
+
+      expect(createHttpUserAgent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          libraryName: 'test-app',
+        })
+      );
+    });
+
+    it('should use default libraryName when window.app is not available', () => {
+      // Mock window without app property
+      Object.defineProperty(global, 'window', {
+        value: {},
+        writable: true,
+      });
+
+      // Create a new instance to trigger constructor
+      const newApiService = new (apiService.constructor as any)();
+
+      expect(createHttpUserAgent).toHaveBeenCalledWith(
+        expect.objectContaining({
+          libraryName: 'mc-app',
+        })
+      );
+    });
   });
 
   describe('get', () => {
@@ -38,26 +93,35 @@ describe('ApiService', () => {
       // Mock executeHttpClientRequest to call the request function
       (appShell.executeHttpClientRequest as jest.Mock).mockImplementation(
         async (requestFn, options) => {
-          return {
-            data: { data: 'test data' },
-            statusCode: 200,
-            getHeader: expect.any(Function),
-          };
+          // Store the requestFn for later execution
+          const result = await requestFn({});
+          return result;
         }
       );
 
       // Call the API service
       const result = await apiService.get();
 
-      // Check that buildApiUrl will be called when requestFn is executed
-      // We can't easily verify this directly since it's called inside the requestFn
+      // Check buildApiUrl was called
+      expect(appShell.buildApiUrl).toHaveBeenCalledWith('/proxy/forward-to');
 
-      // Check the result matches the structure from executeHttpClientRequest
+      // Check fetch was called
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://mocked-api-url.com/proxy/forward-to',
+        expect.any(Object)
+      );
+
+      // Check that the result has the expected structure
       expect(result).toEqual({
         data: { data: 'test data' },
         statusCode: 200,
         getHeader: expect.any(Function),
       });
+
+      // Test the getHeader function
+      const getHeaderFn = result.getHeader;
+      getHeaderFn('content-type');
+      expect(mockResponse.headers.get).toHaveBeenCalledWith('content-type');
     });
 
     it('should include forwardTo config when provided', async () => {
@@ -77,11 +141,8 @@ describe('ApiService', () => {
       (appShell.executeHttpClientRequest as jest.Mock).mockImplementation(
         async (requestFn, options) => {
           capturedOptions = options;
-          return {
-            data: { data: 'test data' },
-            statusCode: 200,
-            getHeader: expect.any(Function),
-          };
+          const result = await requestFn({});
+          return result;
         }
       );
 
@@ -103,6 +164,34 @@ describe('ApiService', () => {
       // Expect the API service to throw the same error
       await expect(apiService.get()).rejects.toThrow('Network error');
     });
+
+    it('should handle response with non-JSON data', async () => {
+      // Prepare a mock response that throws on .json()
+      const jsonError = new Error('Invalid JSON');
+      const mockResponse = {
+        json: jest.fn().mockRejectedValue(jsonError),
+        status: 200,
+        headers: {
+          get: jest.fn().mockReturnValue('text/plain'),
+        },
+      };
+
+      mockFetch.mockResolvedValue(mockResponse);
+
+      // Mock executeHttpClientRequest to call the request function
+      (appShell.executeHttpClientRequest as jest.Mock).mockImplementation(
+        async (requestFn, options) => {
+          try {
+            return await requestFn({});
+          } catch (error) {
+            throw error;
+          }
+        }
+      );
+
+      // Expect the API service to throw the JSON error
+      await expect(apiService.get()).rejects.toThrow('Invalid JSON');
+    });
   });
 
   describe('post', () => {
@@ -122,14 +211,10 @@ describe('ApiService', () => {
       let capturedFetchOptions: any;
       (appShell.executeHttpClientRequest as jest.Mock).mockImplementation(
         async (requestFn) => {
-          const res = await requestFn({
+          const result = await requestFn({
             headers: { Authorization: 'Bearer token' },
           });
-          return {
-            data: { data: 'test data' },
-            statusCode: 200,
-            getHeader: expect.any(Function),
-          };
+          return result;
         }
       );
 
@@ -159,7 +244,7 @@ describe('ApiService', () => {
       // Check the body
       expect(capturedFetchOptions.body).toBe(JSON.stringify(payload));
 
-      // Check the result matches the structure from executeHttpClientRequest
+      // Check the result has the expected structure
       expect(result).toEqual({
         data: { data: 'test data' },
         statusCode: 200,
@@ -182,14 +267,10 @@ describe('ApiService', () => {
       // Mock executeHttpClientRequest
       (appShell.executeHttpClientRequest as jest.Mock).mockImplementation(
         async (requestFn) => {
-          const res = await requestFn({
+          const result = await requestFn({
             headers: { Authorization: 'Bearer token' },
           });
-          return {
-            data: { data: 'test data' },
-            statusCode: 200,
-            getHeader: expect.any(Function),
-          };
+          return result;
         }
       );
 
@@ -209,6 +290,49 @@ describe('ApiService', () => {
         Authorization: 'Bearer token',
         'X-Custom-Header': 'custom-value',
       });
+    });
+
+    it('should include forwardTo config when provided for post', async () => {
+      // Prepare the mock response
+      const mockResponse = {
+        json: jest.fn().mockResolvedValue({ data: 'test data' }),
+        status: 200,
+        headers: {
+          get: jest.fn().mockReturnValue('application/json'),
+        },
+      };
+
+      mockFetch.mockResolvedValue(mockResponse);
+
+      // Mock executeHttpClientRequest to capture the options
+      let capturedOptions: any;
+      (appShell.executeHttpClientRequest as jest.Mock).mockImplementation(
+        async (requestFn, options) => {
+          capturedOptions = options;
+          const result = await requestFn({
+            headers: {},
+          });
+          return result;
+        }
+      );
+
+      // Call the API service with forwardTo option
+      await apiService.post({}, { forwardTo: 'https://example.com/api' });
+
+      // Check that forwardToConfig was included in the options
+      expect(capturedOptions.forwardToConfig).toEqual({
+        uri: 'https://example.com/api',
+      });
+    });
+
+    it('should throw the error when post fails', async () => {
+      const error = new Error('Network error');
+
+      // Mock executeHttpClientRequest to throw an error
+      (appShell.executeHttpClientRequest as jest.Mock).mockRejectedValue(error);
+
+      // Expect the API service to throw the same error
+      await expect(apiService.post({})).rejects.toThrow('Network error');
     });
   });
 });
