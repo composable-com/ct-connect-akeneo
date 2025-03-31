@@ -11,7 +11,6 @@ import {
   buildApiUrl,
   executeHttpClientRequest,
 } from '@commercetools-frontend/application-shell';
-import { MC_API_PROXY_TARGETS } from '@commercetools-frontend/constants';
 
 interface ApiError extends Error {
   status?: number;
