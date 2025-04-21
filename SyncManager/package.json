@@ -6,7 +6,6 @@
   "private": true,
   "scripts": {
     "start": "node build/index.js",
-    "gcp-build": "cp -r /tmp/lib/common-connect /workspace && npm run build && npm pack ../common-connect && npm install common-connect*",
     "start:dev": "concurrently -k \"tsc --watch\" \"nodemon -q build/index.js\"",
     "prebuild": "npm --prefix ../common-connect install && npm --prefix ../common-connect run build",
     "build": "rimraf ./build && tsc",
